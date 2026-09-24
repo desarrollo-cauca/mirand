@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Impacto Consolidado Completo - Miranda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-bg: #111827;
+            --primary-blue: #2563eb;
+            --light-bg: #f3f4f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #e5e7eb; margin: 0; padding: 20px; color: var(--text-main); }
+        #report-container { max-width: 1000px; margin: 0 auto; background-color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        .download-btn {
+            position: fixed; bottom: 30px; right: 30px; background-color: var(--primary-blue); color: white;
+            border: none; padding: 15px 25px; font-size: 16px; font-weight: 600; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); transition: all 0.3s ease; z-index: 1000; display: flex; align-items: center; gap: 10px;
+        }
+        .download-btn:hover { background-color: #1d4ed8; transform: translateY(-2px); }
+
+        .header { background-color: var(--primary-bg); color: white; padding: 30px; border-bottom: 5px solid var(--primary-blue); }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        .header p { margin: 5px 0; font-size: 14px; color: #9ca3af; }
+        .header h2 { margin: 10px 0 0 0; font-size: 20px; font-weight: 400; color: #60a5fa; }
+        
+        .filters { padding: 15px 30px; background-color: white; font-size: 12px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color); }
+        .content { padding: 30px; }
+
+        .kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background-color: var(--light-bg); padding: 20px; border-left: 5px solid var(--primary-blue); border-radius: 4px; }
+        .kpi-card.investment { border-left: 5px solid #10b981; background-color: #ecfdf5; }
+        .kpi-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+        .kpi-value { font-size: 28px; font-weight: 700; margin-top: 5px; }
+
+        .projects-section { margin-bottom: 40px; }
+        .projects-section h3 { font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;}
+        .projects-section ul { list-style: none; padding: 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+        .projects-section li::before { content: "• "; color: var(--text-main); font-weight: bold; }
+        .highlight-li { color: var(--primary-blue); font-weight: 600; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .chart-box h3 { font-size: 15px; text-align: left; margin-bottom: 15px; }
+        .canvas-container { width: 180px; height: 180px; margin: 0 auto 20px auto; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); }
+        
+        .pivot-table th { background-color: #4b8df8; color: white; font-size: 13px; border: 1px solid #fff; }
+        .pivot-table td { border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+        .pivot-table .row-header { font-weight: 700; background-color: #e0e7ff; }
+        .pivot-table .indent { padding-left: 25px; color: #374151; }
+
+        .details-table th { background-color: var(--primary-bg); color: white; font-size: 10px; }
+        .details-table td { font-size: 9.5px; padding: 6px; }
+        .details-table tr:nth-child(even) { background-color: #f9fafb; }
+        .highlight-money { color: #047857; font-weight: bold; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+        .bg-mineria { background: #e0e7ff; color: #4338ca; }
+        .bg-compe { background: #fef3c7; color: #b45309; }
+
+        /* Evitar que las filas se partan a la mitad en el PDF */
+        tr { page-break-inside: avoid; }
+        .page-break { page-break-before: always; }
+        .avoid-break { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+
+    <button class="download-btn" onclick="generatePDF()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Descargar Informe PDF (Completo)
+    </button>
+
+    <div id="report-container">
+        
+        <div class="header">
+            <h1>INFORME DE IMPACTO GLOBAL</h1>
+            <p>Generado el: 24/9/2026 - Con 100% de Registros Históricos</p>
+            <h2>RESUMEN GENERAL (PROYECTOS + MINERÍA + COMPETITIVIDAD)</h2>
+        </div>
+        
+        <div class="filters">AÑO: Todos | MUNICIPIO: Miranda</div>
+
+        <div class="content">
+            
+            <div class="kpi-container avoid-break">
+                <div class="kpi-card" style="border-left-color: #2563eb;">
+                    <div class="kpi-title">TOTAL ATENCIONES</div>
+                    <div class="kpi-value">403</div>
+                </div>
+                <div class="kpi-card" style="border-left-color: #10b981;">
+                    <div class="kpi-title">PROYECTOS / COMPONENTES</div>
+                    <div class="kpi-value">7</div>
+                </div>
+                <div class="kpi-card" style="border-left-color: #8b5cf6;">
+                    <div class="kpi-title">MUNICIPIOS</div>
+                    <div class="kpi-value">1</div>
+                </div>
+                <div class="kpi-card investment">
+                    <div class="kpi-title">INVERSIÓN TOTAL (Proyectos)</div>
+                    <div class="kpi-value" style="color: #047857;">$3.469.574</div>
+                </div>
+            </div>
+
+            <div class="projects-section avoid-break">
+                <h3>Proyectos y Componentes Involucrados</h3>
+                <ul>
+                    <li>Comercialización (FOMENTO ECONOMICO)</li>
+                    <li>Empleo (FOMENTO ECONOMICO)</li>
+                    <li>FORTALECIMIENTO DE LA CAPACIDAD Y GESTIÓN INSTITUCIONAL... (FOMENTO ECONOMICO)</li>
+                    <li>FORTALECIMIENTO ECONÓMICO DE UNIDADES PRODUCTIVAS... (FOMENTO ECONOMICO)</li>
+                    <li>Fortalecimiento (FOMENTO ECONOMICO)</li>
+                    <li>COMPONENTE MINERÍA</li>
+                    <li>COMPONENTE COMPETITIVIDAD</li>
+                </ul>
+            </div>
+
+            <!-- TABLA DINÁMICA DE CONSOLIDACIÓN -->
+                <h3 style="font-size: 15px; margin-bottom: 10px;">Gráficos</h3>
+
+            <!-- Gráficas -->
+            <div class="charts-grid avoid-break">
+                <div class="chart-box">
+                    <h3>Distribución de Género</h3>
+                    <div class="canvas-container"><canvas id="chartGenero"></canvas></div>
+                    <table>
+                        <tr><th>Categoría</th><th>Total (Base + Nuevos)</th></tr>
+                        <tr><td>Hombres</td><td>82</td></tr>
+                        <tr><td>Mujeres</td><td>247</td></tr>
+                        <tr><td>No especificado / Sin dato</td><td>74</td></tr>
+                        <tr style="font-weight:bold; background:#f3f4f6;"><td>Total</td><td>403</td></tr>
+                    </table>
+                </div>
+                <div class="chart-box">
+                    <h3>Grupos de Edad</h3>
+                    <div class="canvas-container"><canvas id="chartEdad"></canvas></div>
+                    <table>
+                        <tr><th>Categoría</th><th>Total (Base + Nuevos)</th></tr>
+                        <tr><td>14–28 Años</td><td>35</td></tr>
+                        <tr><td>29–59 Años</td><td>182</td></tr>
+                        <tr><td>Mayor a 60 Años</td><td>32</td></tr>
+                        <tr><td>No especificado / Sin dato</td><td>74</td></tr>
+                        <tr style="font-weight:bold; background:#f3f4f6;"><td>Total</td><td>403</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="page-break"></div> <!-- Salto de página -->
+
+            <div class="charts-grid avoid-break">
+                <div class="chart-box">
+                    <h3>Grupos Poblacionales</h3>
+                    <div class="canvas-container"><canvas id="chartPoblacion"></canvas></div>
+                    <table>
+                        <tr><th>Categoría</th><th>Total</th></tr>
+                        <tr><td>Víctimas</td><td>24</td></tr>
+                        <tr><td>Campesino</td><td>11</td></tr>
+                        <tr><td>LGBTI-OSIGD</td><td>1</td></tr>
+                        <tr><td>Ninguno / No especificado</td><td>367</td></tr>
+                        <tr style="font-weight:bold; background:#f3f4f6;"><td>Total</td><td>403</td></tr>
+                    </table>
+                </div>
+                <div class="chart-box">
+                    <h3>Identidad Étnica</h3>
+                    <div class="canvas-container"><canvas id="chartEtnia"></canvas></div>
+                    <table>
+                        <tr><th>Categoría</th><th>Total</th></tr>
+                        <tr><td>Afro</td><td>90</td></tr>
+                        <tr><td>Indígena</td><td>63</td></tr>
+                        <tr><td>Mestizo</td><td>86</td></tr>
+                        <tr><td>Room</td><td>5</td></tr>
+                        <tr><td>Ninguno / No especificado</td><td>159</td></tr>
+                        <tr style="font-weight:bold; background:#f3f4f6;"><td>Total</td><td>403</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="charts-grid avoid-break" style="grid-template-columns: 1fr; max-width: 500px; margin-bottom: 50px;">
+                <div class="chart-box">
+                    <h3>Tipo de Beneficio</h3>
+                    <div class="canvas-container"><canvas id="chartBeneficio"></canvas></div>
+                    <table>
+                        <tr><th>Categoría</th><th>Cálculo (+74)</th><th>Total Global</th></tr>
+                        <tr><td>Asistencia Técnica</td><td>71 + 73</td><td>144</td></tr>
+                        <tr><td>Otro (incluye Café)</td><td>17 + 1</td><td>18</td></tr>
+                        <tr><td>No especificado</td><td>241 + 0</td><td>241</td></tr>
+                        <tr style="font-weight:bold; background:#f3f4f6;"><td></td><td>Total</td><td>403</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABLA 1: 100% DATOS DEL PDF (21 REGISTROS) -->
+            <div style="margin-top: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #2563eb; padding-bottom: 5px;">
+                    1. DETALLE DE ACTIVIDADES E INVERSIÓN (21 Registros Base PDF)
+                </h3>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Actividad</th>
+                            <th>Fecha</th>
+                            <th>Beneficio</th>
+                            <th>Impacto</th>
+                            <th>Inversión (Costo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los 12 con Inversión -->
+                        <tr><td>Taller de educación financira y desarrollo socio empresarial para emprendedores</td><td>2026-02-25</td><td>Asistencia Ténica</td><td>22</td><td class="highlight-money">$589.576</td></tr>
+                        <tr><td>Asistencia técnica personalizada ... Postres Bocados Benditos.</td><td>2026-02-25</td><td>Asistencia Ténica</td><td>1</td><td class="highlight-money">$140.000</td></tr>
+                        <tr><td>Asistencia técnica en fortalecimiento ... Peluquería Bibi.</td><td>2026-03-04</td><td>Asistencia Ténica</td><td>1</td><td class="highlight-money">$70.000</td></tr>
+                        <tr><td>Asistencia técnica personalizada - ... Postre Bocado Bendito</td><td>2026-03-04</td><td>Asistencia Ténica</td><td>1</td><td class="highlight-money">$70.000</td></tr>
+                        <tr><td>Mesa técnica de articulación interinstitucional ...</td><td>2026-04-16</td><td>Asistencia Ténica</td><td>4</td><td class="highlight-money">$46.666</td></tr>
+                        <tr><td>Asistencia técnica y diagnóstico inicial ... Joyas y Accesorios Mareo.</td><td>2026-04-16</td><td>Asistencia Ténica</td><td>1</td><td class="highlight-money">$46.666</td></tr>
+                        <tr><td>Asistencia técnica en fortalecimiento ... Decoraciones Lorenita.</td><td>2026-04-16</td><td>Asistencia Ténica</td><td>1</td><td class="highlight-money">$46.666</td></tr>
+                        <tr><td>Taller habilidades blandas</td><td>2026-04-22</td><td>Asistencia Ténica</td><td>20</td><td class="highlight-money">$1.900.000</td></tr>
+                        <tr><td>Visita a emprendedores gastronomicos ... cauca sabe a paz</td><td>2026-05-08</td><td>Asistencia Ténica</td><td>6</td><td class="highlight-money">$140.000</td></tr>
+                        <tr><td>Implementación de ruta gastronomíca Cauca sabe a Paz</td><td>2026-05-10</td><td>Asistencia Ténica</td><td>6</td><td class="highlight-money">$140.000</td></tr>
+                        <tr><td>Taller de atenciòn al cliente a comerciantes</td><td>2026-08-04</td><td>Asistencia Ténica</td><td>8</td><td class="highlight-money">$140.000</td></tr>
+                        <tr><td>Taller de comercialización con actores agroindustriales</td><td>2026-08-21</td><td>Otro</td><td>17</td><td class="highlight-money">$140.000</td></tr>
+                        <!-- Los 9 sin Inversión -->
+                        <tr><td>SOCIALIZACIÓN AVANCES METODOLOGIA RUNIN...</td><td>2025-05-09</td><td>N/D</td><td>11</td><td>-</td></tr>
+                        <tr><td>TALLER EDUCACIÓN FINANCIERA, INNOVACION Y DESARROLLO...</td><td>2025-09-09</td><td>N/D</td><td>28</td><td>-</td></tr>
+                        <tr><td>FERIA DE EMPRENDIMIENTOS Y AGROPECUARIA</td><td>2025-09-26</td><td>N/D</td><td>84</td><td>-</td></tr>
+                        <tr><td>TALLER DE FOTOGRAFIA</td><td>2025-10-10</td><td>N/D</td><td>29</td><td>-</td></tr>
+                        <tr><td>FERIA DE EMPRENDIMIENTOS</td><td>2025-12-19</td><td>N/D</td><td>23</td><td>-</td></tr>
+                        <tr><td>SOCIALIZACION MARCA PAISSANA</td><td>2025-08-05</td><td>N/D</td><td>1</td><td>-</td></tr>
+                        <tr><td>ASISTENCIA TECNICA EDUCACIÓN FINANCIERA E INNOVACION...</td><td>2025-09-09</td><td>N/D</td><td>32</td><td>-</td></tr>
+                        <tr><td>TALLER DE FOTOGRAFÍA Y MANEJO EN REDES SOCIALES</td><td>2025-10-10</td><td>N/D</td><td>29</td><td>-</td></tr>
+                        <tr><td>DISEÑO DE PORTAFOLIO DE SERVICIOS E IMAGEN CREATIVA</td><td>2025-10-29</td><td>N/D</td><td>4</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TABLA 2: 100% DATOS DEL CSV (74 REGISTROS) -->
+            <div style="margin-top: 40px;">
+                <h3 style="margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+                    2. REGISTRO DETALLADO DE BENEFICIARIOS (74 Registros Minería y Competitividad)
+                </h3>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Identificación</th>
+                            <th>Componente</th>
+                            <th>Acción / Beneficio</th>
+                            <th>Entidad / Organización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fila 1 - Edgar -->
+                        <tr><td>EDGAR DAGUA CORPUS</td><td>4715248</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>CAUCA SABE A CAFÉ</td><td>ASOC CAFE AROMA</td></tr>
+                        <!-- Filas Mineria 1 -->
+                        <tr><td>Ludwith Alberto</td><td>6645368</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <tr><td>Dorian Yurani</td><td>1059064072</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Luis Andres</td><td>10346777</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Leider</td><td>1061710567</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Deyermon</td><td>168800359</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Aldemar</td><td>6301764</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>William</td><td>16886849</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Liliana</td><td>25540785</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Darley</td><td>16882887</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yeferson</td><td>1059063966</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Joan Emilio</td><td>6390701</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Nelson</td><td>16892700</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Luz Angela</td><td>1143835477</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Julio Cesar</td><td>1114891549</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Fernando</td><td>111887432</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Jose</td><td>94301968</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Leonidas</td><td>16882888</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>James</td><td>13014651</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Walter</td><td>10346793</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Brilly</td><td>1114895641</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Daniel</td><td>21581194</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Arley</td><td>1133354030</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Juan Carlos</td><td>1114893610</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yan Sebastian</td><td>1114899648</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yonier</td><td>1059989027</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Jaider</td><td>1114876049</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Segundo serafin</td><td>6299117</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>ASOTRANSMIR E.A.T</td></tr>
+                        <tr><td>Alexander</td><td>1059062994</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía Miranda</td></tr>
+                        <tr><td>Leyder</td><td>1061710567</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <tr><td>Fernando</td><td>76043074</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <tr><td>Jaider Velez</td><td>1114876049</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>-</td></tr>
+                        <!-- Filas Competitividad 1 -->
+                        <tr><td>Donalid Labio</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>Agroindustria cacaotera</td></tr>
+                        <tr><td>EDGAR DAGUA CORPUS</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>ASOCIACIÓN CAFE AROMA</td></tr>
+                        <tr><td>Efrain Ramirez</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>O.P. OCEAN PACIFIC S.A.S</td></tr>
+                        <tr><td>YOINER GUERRERO</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>CAFÉ GUERRERO</td></tr>
+                        <tr><td>EDGAR DAGUA CORPUS</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>ASOCIACIÓN CAFE AROMA</td></tr>
+                        <!-- Filas Mineria 2 -->
+                        <tr><td>Ludwith Alberto</td><td>6645368</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <tr><td>Dorian Yurani</td><td>1059064072</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Luis Andres</td><td>10346777</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Leider</td><td>1061710567</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldia Miranda</td></tr>
+                        <tr><td>Deyermon</td><td>168800359</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Aldemar</td><td>6301764</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>William</td><td>16886849</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Liliana</td><td>25540785</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Darley</td><td>16882887</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yeferson</td><td>1059063966</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Joan Emilio</td><td>6390701</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Nelson</td><td>16892700</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Luz Angela</td><td>1143835477</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Julio Cesar</td><td>1114891549</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Fernando</td><td>111887432</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Jose</td><td>94301968</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Leonidas</td><td>16882888</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>James</td><td>13014651</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Walter</td><td>10346793</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Brilly</td><td>1114895641</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Daniel</td><td>21581194</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Arley</td><td>1133354030</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Juan Carlos</td><td>1114893610</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yan Sebastian</td><td>1114899648</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Yonier</td><td>1059989027</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Jaider</td><td>1114876049</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Particular</td></tr>
+                        <tr><td>Segundo serafin</td><td>6299117</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>ASOTRANSMIR E.A.T</td></tr>
+                        <tr><td>Alexander</td><td>1059062994</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía Miranda</td></tr>
+                        <tr><td>Leyder</td><td>1061710567</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <tr><td>Fernando</td><td>76043074</td><td><span class="badge bg-mineria">MINERÍA</span></td><td>ASISTENCIA TÉCNICA MINERA</td><td>Alcaldía de Miranda</td></tr>
+                        <!-- Filas Competitividad 2 -->
+                        <tr><td>Donalid Labio</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>Agroindustria cacaotera</td></tr>
+                        <tr><td>EDGAR DAGUA CORPUS</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>ASOCIACIÓN CAFE AROMA</td></tr>
+                        <tr><td>Efrain Ramirez</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>O.P. OCEAN PACIFIC S.A.S</td></tr>
+                        <tr><td>YOINER GUERRERO</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>CAFÉ GUERRERO</td></tr>
+                        <tr><td>Jorge Enrique Silva Pretel</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>Nativos Fusión</td></tr>
+                        <tr><td>VIVIANA COSSIO</td><td>-</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>PATRICIA ACCESORIOS</td></tr>
+                        <tr><td>Blanca Viviana Cossío Zúñiga</td><td>1114454240</td><td><span class="badge bg-compe">COMPETITIVIDAD</span></td><td>ASISTENCIA TÉCNICA EMPRESARIAL</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const donutOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }, cutout: '65%' };
+
+        new Chart(document.getElementById('chartGenero'), {
+            type: 'doughnut',
+            data: { labels: ['Hombres', 'Mujeres', 'No especificado'], datasets: [{ data: [82, 247, 74], backgroundColor: ['#3b82f6', '#ec4899', '#9ca3af'], borderWidth: 0 }] },
+            options: donutOptions
+        });
+
+        new Chart(document.getElementById('chartEdad'), {
+            type: 'doughnut',
+            data: { labels: ['14–28', '29–59', 'Mayor a 60', 'No especificado'], datasets: [{ data: [35, 182, 32, 74], backgroundColor: ['#f59e0b', '#10b981', '#8b5cf6', '#9ca3af'], borderWidth: 0 }] },
+            options: donutOptions
+        });
+
+        new Chart(document.getElementById('chartPoblacion'), {
+            type: 'doughnut',
+            data: { labels: ['Víctimas', 'Campesino', 'LGBTI', 'Ninguno/No espec.'], datasets: [{ data: [24, 11, 1, 367], backgroundColor: ['#06b6d4', '#f97316', '#22c55e', '#e2e8f0'], borderWidth: 0 }] },
+            options: donutOptions
+        });
+
+        new Chart(document.getElementById('chartEtnia'), {
+            type: 'doughnut',
+            data: { labels: ['Afro', 'Mestizo', 'Indígena', 'Room', 'Ninguno/No espec.'], datasets: [{ data: [90, 86, 63, 5, 159], backgroundColor: ['#8b5cf6', '#14b8a6', '#f97316', '#fcd34d', '#e2e8f0'], borderWidth: 0 }] },
+            options: donutOptions
+        });
+
+        new Chart(document.getElementById('chartBeneficio'), {
+            type: 'doughnut',
+            data: { labels: ['Asistencia Técnica', 'Otro', 'No especificado'], datasets: [{ data: [144, 18, 241], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'], borderWidth: 0 }] },
+            options: donutOptions
+        });
+
+        function generatePDF() {
+            const element = document.getElementById('report-container');
+            const opt = {
+                margin:       [10, 0, 10, 0],
+                filename:     'Informe_Impacto_Miranda_100_Datos.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1000 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            const btn = document.querySelector('.download-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generando PDF (Puede tardar)...';
+            btn.style.backgroundColor = '#10b981';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.style.backgroundColor = '#2563eb';
+            });
+        }
+    </script>
+</body>
+</html>
